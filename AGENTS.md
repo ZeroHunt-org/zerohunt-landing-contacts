@@ -15,6 +15,10 @@ npm run dev      # local dev server
 npm run build    # tsc type-check + vite build → dist/
 ```
 
+## Deploy
+
+GitHub Pages via `.github/workflows/deploy.yml`, on every push to `main`. Custom domain `contact.zerohunt.ai` from `public/CNAME`; DNS is a CNAME `contact` → `zerohunt-org.github.io` in the Cloudflare zone `zerohunt.ai` (DNS only, not proxied).
+
 ## Structure
 
 - `src/App.tsx` — whole page (header, kit tiles, form, footer).
