@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Zero Hunt">
+  <title>Zero Hunt</title>
+  <rect width="100" height="100" rx="20" ry="20" fill="#E1333E"/>
+  <g fill="#FFFFFF">
+    <path transform="translate(21.387 66.054) scale(0.046000 -0.046000)" d="M568 134V0H39V135L384 564H56V698H560V563L214 134Z"/>
+    <path transform="translate(47.309 66.054) scale(0.046000 -0.046000)" d="M495 0V286H229V0H77V698H229V420H495V698H647V0Z"/>
+  </g>
+</svg>

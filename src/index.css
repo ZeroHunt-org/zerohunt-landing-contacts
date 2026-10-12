@@ -1,0 +1,32 @@
+/* Fonts: IBM Plex, bundled by @fontsource (no external CDN), as on the landing. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background: #030508;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Primary action: solid signal red. Copied from zerohunt-landing landing.css. */
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  background: hsl(356 72% 50%);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12);
+  transition: background-color 0.15s ease;
+}
+
+.cta-button:hover {
+  background: hsl(356 76% 56%);
+}
+
+.cta-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
