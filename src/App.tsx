@@ -1,5 +1,8 @@
 /**
- * Contacts page: media/press kit downloads + collaboration request form.
+ * Three pages on one bundle, picked by path (see vite.config.ts inputs):
+ * /            kit downloads + collaboration request form
+ * /media-kit/  media kit download only
+ * /press-kit/  press kit download only
  *
  * Markup and classes mirror zerohunt-landing's ContactPage, so the two read as
  * one site. The form has no backend yet: submit only validates (native HTML
@@ -7,21 +10,20 @@
  */
 import { useState } from 'react'
 
-/** Static files served from public/downloads. */
-const KITS = [
-  {
-    id: 'media-kit',
+/** Static files served from public/downloads; keys double as page paths. */
+const KITS = {
+  'media-kit': {
     title: 'Media kit',
     body: 'Logos, colour palette, typography and guidelines for using the Zero Hunt brand.',
     href: '/downloads/zerohunt-media-kit.zip',
   },
-  {
-    id: 'press-kit',
+  'press-kit': {
     title: 'Press kit',
     body: 'Press releases, company fact sheet, photos and team bios for journalists.',
     href: '/downloads/zerohunt-press-kit.zip',
   },
-] as const
+} as const
+type KitId = keyof typeof KITS
 
 const COLLABORATION_TYPES = [
   'Commercial partnership',
@@ -46,7 +48,63 @@ function DownloadIcon () {
   )
 }
 
-export function App () {
+/** Header + footer shared by every page. */
+function Shell ({ children }: { children: React.ReactNode }) {
+  return (
+    <div className='min-h-screen flex flex-col bg-[#030508] text-gray-300 antialiased'>
+      <header className='border-b border-white/[0.06]'>
+        <div className='max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-center'>
+          <a href='https://zerohunt.ai' aria-label='Zero Hunt'>
+            <img src='/brand/zerohunt-logo-horizontal-on-dark.svg' alt='Zero Hunt' width={134} height={28} className='h-7 w-auto' />
+          </a>
+        </div>
+      </header>
+
+      {children}
+
+      <footer className='border-t border-white/[0.06]'>
+        <div className='max-w-3xl mx-auto px-4 sm:px-6 py-8 text-xs text-gray-400 text-center'>
+          <p>© {new Date().getFullYear()} Zero Hunt — Over Holding Srl</p>
+          <p className='font-mono text-[11px] text-gray-500 mt-1'>VAT IT02945890305</p>
+        </div>
+      </footer>
+    </div>
+  )
+}
+
+function KitTile ({ id }: { id: KitId }) {
+  const kit = KITS[id]
+  return (
+    <a
+      href={kit.href}
+      download
+      className='group flex flex-col items-center text-center gap-4 rounded-xl border border-gray-800 bg-gray-900/30 p-6 md:p-8 hover:border-[hsl(356_74%_54%/0.5)] hover:bg-gray-900/50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2'
+    >
+      <span className='cta-button flex-shrink-0 w-14 h-14 rounded-lg'>
+        <DownloadIcon />
+      </span>
+      <span className='min-w-0'>
+        <span className='block text-xl md:text-2xl font-bold text-white mb-1'>
+          Download the {kit.title}
+        </span>
+        <span className='block text-sm text-gray-400 leading-relaxed'>{kit.body}</span>
+      </span>
+    </a>
+  )
+}
+
+/** Single-kit page: the download tile alone, centred in the viewport. */
+function KitPage ({ id }: { id: KitId }) {
+  return (
+    <Shell>
+      <main className='flex-1 w-full max-w-md mx-auto px-4 sm:px-6 py-12 md:py-20 flex items-center'>
+        <div className='w-full'><KitTile id={id} /></div>
+      </main>
+    </Shell>
+  )
+}
+
+function ContactPage () {
   const [form, setForm] = useState(EMPTY_FORM)
   const [sent, setSent] = useState(false)
 
@@ -76,15 +134,7 @@ export function App () {
   }
 
   return (
-    <div className='min-h-screen bg-[#030508] text-gray-300 antialiased'>
-      <header className='border-b border-white/[0.06]'>
-        <div className='max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-center'>
-          <a href='https://zerohunt.ai' aria-label='Zero Hunt'>
-            <img src='/brand/zerohunt-logo-horizontal-on-dark.svg' alt='Zero Hunt' width={134} height={28} className='h-7 w-auto' />
-          </a>
-        </div>
-      </header>
-
+    <Shell>
       <main className='max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-20'>
         <header className='mb-12 md:mb-16 text-center'>
           <span className='text-[11px] sm:text-xs font-mono tracking-[0.3em] uppercase text-cyan-400/80 block mb-3'>
@@ -100,24 +150,7 @@ export function App () {
 
         {/* Kits: two large download tiles */}
         <section aria-label='Download' className='grid sm:grid-cols-2 gap-4 md:gap-6 mb-16 md:mb-20'>
-          {KITS.map((kit) => (
-            <a
-              key={kit.id}
-              href={kit.href}
-              download
-              className='group flex flex-col items-center text-center gap-4 rounded-xl border border-gray-800 bg-gray-900/30 p-6 md:p-8 hover:border-[hsl(356_74%_54%/0.5)] hover:bg-gray-900/50 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2'
-            >
-              <span className='cta-button flex-shrink-0 w-14 h-14 rounded-lg'>
-                <DownloadIcon />
-              </span>
-              <span className='min-w-0'>
-                <span className='block text-xl md:text-2xl font-bold text-white mb-1'>
-                  Download the {kit.title}
-                </span>
-                <span className='block text-sm text-gray-400 leading-relaxed'>{kit.body}</span>
-              </span>
-            </a>
-          ))}
+          {(Object.keys(KITS) as KitId[]).map((id) => <KitTile key={id} id={id} />)}
         </section>
 
         {/* Collaboration form */}
@@ -171,13 +204,14 @@ export function App () {
               )}
         </section>
       </main>
-
-      <footer className='border-t border-white/[0.06]'>
-        <div className='max-w-3xl mx-auto px-4 sm:px-6 py-8 text-xs text-gray-400 text-center'>
-          <p>© {new Date().getFullYear()} Zero Hunt — Over Holding Srl</p>
-          <p className='font-mono text-[11px] text-gray-500 mt-1'>VAT IT02945890305</p>
-        </div>
-      </footer>
-    </div>
+    </Shell>
   )
+}
+
+export function App () {
+  // '/press-kit/' → 'press-kit'; anything that is not a kit gets the contact page.
+  const slug = window.location.pathname.replace(/^\/+|\/+$/g, '')
+  // Own-property check: `in` would also match prototype keys like 'constructor'.
+  const isKit = Object.prototype.hasOwnProperty.call(KITS, slug)
+  return isKit ? <KitPage id={slug as KitId} /> : <ContactPage />
 }

@@ -21,7 +21,8 @@ GitHub Pages via `.github/workflows/deploy.yml`, on every push to `main`. Custom
 
 ## Structure
 
-- `src/App.tsx` — whole page (header, kit tiles, form, footer).
+- `src/App.tsx` — all pages: `/` (kit tiles + form), `/media-kit/` and `/press-kit/` (single kit tile). Page picked by `location.pathname`.
+- `index.html`, `media-kit/index.html`, `press-kit/index.html` — one HTML entry per path (own `<title>`/description), same bundle. GitHub Pages has no SPA fallback, so a new path needs a new entry here and in `vite.config.ts` `rollupOptions.input`.
 - `src/index.css` — Tailwind + `.cta-button` (copied from landing `landing.css`).
 - `tailwind.config.ts` — landing's retuned `cyan` / `emerald` / `gray` scales; keep in sync with landing.
 - `public/downloads/` — kit files: `zerohunt-media-kit.zip`, `zerohunt-press-kit.zip` (paths in `KITS`, `src/App.tsx`).
