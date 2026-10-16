@@ -5,8 +5,7 @@
  * /press-kit/  press kit download only
  *
  * Markup and classes mirror zerohunt-landing's ContactPage, so the two read as
- * one site. The form has no backend yet: submit only validates (native HTML
- * constraints) and shows the confirmation state locally.
+ * one site. The form posts to a Google Form (see GOOGLE_FORM below).
  */
 import { useState } from 'react'
 
@@ -35,6 +34,39 @@ const COLLABORATION_TYPES = [
 ] as const
 
 const EMPTY_FORM = { firstName: '', lastName: '', email: '', company: '', role: '', collaboration: '' }
+
+/**
+ * Responses land in this Google Form. Entry ids come from the form's
+ * FB_PUBLIC_LOAD_DATA_ (view source on /viewform): renaming a question keeps
+ * its id, deleting and recreating it does not — update the map if so.
+ */
+const GOOGLE_FORM = {
+  action: 'https://docs.google.com/forms/d/e/1FAIpQLSf44GAu6clDNwhMkjRmDUCDvdnddHqc9cLVtphQ-miGdTZGYg/formResponse',
+  entries: {
+    firstName: 'entry.435397117',
+    lastName: 'entry.1248822926',
+    email: 'entry.482978788',
+    company: 'entry.991481155',
+    role: 'entry.1622473348',
+    collaboration: 'entry.492277712',
+  } satisfies Record<keyof typeof EMPTY_FORM, string>,
+}
+
+/** Build the formResponse body. */
+function toGoogleFormBody (form: typeof EMPTY_FORM) {
+  const body = new URLSearchParams()
+  for (const [key, entry] of Object.entries(GOOGLE_FORM.entries)) {
+    body.append(entry, form[key as keyof typeof EMPTY_FORM])
+  }
+  // 'Other' is the radio's built-in "Other" choice, not a listed option: Google
+  // only accepts it through the __other_option__ sentinel plus its free text.
+  if (form.collaboration === 'Other') {
+    const entry = GOOGLE_FORM.entries.collaboration
+    body.set(entry, '__other_option__')
+    body.set(`${entry}.other_option_response`, 'Other')
+  }
+  return body
+}
 
 // 16 px on phones: iOS Safari zooms the page into any field smaller than that.
 const inputClass = 'w-full bg-[#0a0e14] border border-white/10 focus:border-white/40 focus:ring-2 focus:ring-white/10 rounded-md px-3 py-2.5 text-base sm:text-sm text-white placeholder-gray-500 focus:outline-none transition'
@@ -106,16 +138,26 @@ function KitPage ({ id }: { id: KitId }) {
 
 function ContactPage () {
   const [form, setForm] = useState(EMPTY_FORM)
-  const [sent, setSent] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   function onChange (key: keyof typeof EMPTY_FORM, value: string) {
     setForm((f) => ({ ...f, [key]: value }))
+    if (status === 'error') setStatus('idle')
   }
 
-  function onSubmit (e: React.FormEvent) {
-    // Nothing to post to yet: the browser already enforced `required`/`type`.
+  async function onSubmit (e: React.FormEvent) {
+    // The browser already enforced `required`/`type` before this runs.
     e.preventDefault()
-    setSent(true)
+    if (status === 'sending') return
+    setStatus('sending')
+    try {
+      // Google sends no CORS headers, so the response is opaque: we cannot read
+      // it, only know the request reached Google. A network failure still throws.
+      await fetch(GOOGLE_FORM.action, { method: 'POST', mode: 'no-cors', body: toGoogleFormBody(form) })
+      setStatus('sent')
+    } catch {
+      setStatus('error')
+    }
   }
 
   function field (key: keyof typeof EMPTY_FORM, label: string, type: string, autoComplete: string) {
@@ -157,7 +199,7 @@ function ContactPage () {
         <section>
           <h2 className='text-xl font-bold text-white mb-5 text-center'>Propose a collaboration</h2>
 
-          {sent
+          {status === 'sent'
             ? (
               <div role='status' aria-live='polite' className='rounded-xl border border-emerald-500/40 bg-emerald-500/[0.05] p-6 md:p-8 text-center'>
                 <h3 className='text-lg font-bold text-white mb-1.5'>Thank you, {form.firstName}.</h3>
@@ -166,7 +208,7 @@ function ContactPage () {
                 </p>
                 <button
                   type='button'
-                  onClick={() => { setForm(EMPTY_FORM); setSent(false) }}
+                  onClick={() => { setForm(EMPTY_FORM); setStatus('idle') }}
                   className='text-sm text-cyan-400 hover:text-cyan-300 transition-colors font-medium'
                 >
                   Send another request →
@@ -195,9 +237,18 @@ function ContactPage () {
                     {COLLABORATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </label>
+                {status === 'error' && (
+                  <p role='alert' className='text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-md px-3 py-2'>
+                    Could not send your request. Check your connection and try again.
+                  </p>
+                )}
                 <div className='pt-2 flex justify-center'>
-                  <button type='submit' className='cta-button w-full sm:w-auto px-8 py-3 rounded-lg text-white font-semibold whitespace-nowrap'>
-                    Send request
+                  <button
+                    type='submit'
+                    disabled={status === 'sending'}
+                    className='cta-button w-full sm:w-auto px-8 py-3 rounded-lg text-white font-semibold whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed'
+                  >
+                    {status === 'sending' ? 'Sending…' : 'Send request'}
                   </button>
                 </div>
               </form>
