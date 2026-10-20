@@ -1,5 +1,6 @@
 # zerohunt-landing-contacts
 
+
 Contacts page for Zero Hunt: media kit / press kit downloads + collaboration request form.
 Visual style mirrors [zerohunt-landing](https://github.com/ZeroHunt-org/zerohunt-landing) (`src/pages/ContactPage.tsx`).
 
