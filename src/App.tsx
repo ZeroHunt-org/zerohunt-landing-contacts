@@ -18,7 +18,7 @@ const KITS = {
   },
   'press-kit': {
     title: 'Press kit',
-    body: 'Press releases, company fact sheet, photos and team bios for journalists.',
+    body: 'Press releases and Company Media',
     href: '/downloads/zerohunt-press-kit.zip',
   },
 } as const
